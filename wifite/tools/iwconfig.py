@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
 
 from .dependency import Dependency
@@ -7,6 +7,11 @@ class Iwconfig(Dependency):
     dependency_required = True
     dependency_name = 'iwconfig'
     dependency_url = 'apt-get install wireless-tools'
+
+    @classmethod
+    def exists(cls):
+        from ..util.process import Process
+        return Process.exists('iwconfig')
 
 
     @classmethod
@@ -24,7 +29,6 @@ class Iwconfig(Dependency):
         from ..util.process import Process
 
         interfaces = set()
-        iface = ''
 
         (out, err) = Process.call('iwconfig')
         for line in out.split('\n'):
@@ -33,16 +37,11 @@ class Iwconfig(Dependency):
             if not line.startswith(' '):
                 iface = line.split(' ')[0]
                 if '\t' in iface:
-                    iface = iface.split('\t')[0].strip()
-
-                iface = iface.strip()
-                if len(iface) == 0:
-                    continue
-
+                    iface = iface.split('\t')[0]
                 if mode is None:
                     interfaces.add(iface)
 
-            if mode is not None and 'Mode:{}'.format(mode) in line and len(iface) > 0:
+            if mode is not None and 'mode:{}'.format(mode.lower()) in line.lower():
                 interfaces.add(iface)
 
         return list(interfaces)
